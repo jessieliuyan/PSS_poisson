@@ -386,7 +386,7 @@ parameter_tabs <- tabsetPanel(
     )
 )
 ui <- fluidPage(
-    titlePanel("Power Analysis of Poission Regression with Bernoulli Distribution "),
+    titlePanel("Power Analysis of Poisson Regression with Bernoulli Distribution "),
         tabsetPanel(
             tabPanel("Power anaylysis",
                      sidebarLayout(
