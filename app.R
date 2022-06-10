@@ -54,8 +54,8 @@ g.power<-function(tail,n1,n2,st,expb0,expb1,p,alpha,t){
         expb00<-p*exp(b0)*exp(b1)+(1-p)*exp(b0)
         varb1<-(1/(1-p)+1/p/exp(b1))/exp(b0)
         varb00<-1/p/(1-p)/expb00
-        zp<-(sqrt((n1+st*(j-1))*b)-a*sqrt(varb00))/sqrt(varb1)
-        power.g$power_g[j]<-pnorm(zp)
+        zp<-pnorm(log(expb1)*sqrt(n1+st*(j-1))/sqrt(varb00)-a*sqrt(varb1/varb00))
+        power.g$power_g[j]<-zp
         power.g$n[j]<-n1+st*(j-1)
     }
     return(power.g)}
@@ -107,7 +107,7 @@ g.size<-function(tail,expb0,expb1,p,alpha,power1,power2,pt,t){
         expb00<-p*expb0*expb1+(1-p)*expb0
         varb1<-(1/(1-p)+1/p/expb1)/expb0
         varb00<-1/p/(1-p)/expb00
-        s<-round((a*sqrt(varb00)+c*sqrt(varb1))^2/b,digits = 0)
+        s<-round((a*sqrt(varb1)+c*sqrt(varb00))^2/b,digits = 0)
         size.g$size_g[j]<-s
         size.g$power[j]<-power1+pt*(j-1)}
     return(size.g)
@@ -155,7 +155,7 @@ g.effect<-function(tail,expb0,p,alpha,n1,n2,st,power1,power2,pt,t){
         expb00<-p*expb0*exp(b1)+(1-p)*expb0
         varb1<-(1/(1-p)+1/p/exp(b1))/expb0
         varb00<-1/p/(1-p)/expb00
-        f<-n-(a*sqrt(varb00)+b*sqrt(varb1))^2/b1/b1/t
+        f<-n-(a*sqrt(varb1)+b*sqrt(varb00))^2/b1/b1/t
         return(f)
     }
     
@@ -278,7 +278,37 @@ parameter_tabs <- tabsetPanel(
     id = "params",
     type = "hidden",
     tabPanel("Power",
-             numericInput(inputId="expb1",
+             numericInput(inputId="tail1",
+                          label="Alternative (two sided=2 or one side=1)",
+                          value=1,
+                          min = 1,
+                          max = 2),   
+             
+             numericInput(inputId="expb01",
+                          label="expb0",
+                          value=0.85,
+                          min = 0,
+                          max = 1000),
+             
+             numericInput(inputId="alpha1",
+                          label="Type I error",
+                          value=0.05,
+                          min = 0,
+                          max = 1),
+             
+             numericInput(inputId="t1",
+                          label="Mean exposure",
+                          value=1,
+                          min = 0,
+                          max = 1000),
+             
+             numericInput(inputId="p1",
+                          label="Parameter of bernoulli distribution",
+                          value=0.5,
+                          min = 0,
+                          max = 1),
+             
+             numericInput(inputId="expb11",
                           label="expb1",
                           value=1.3,
                           min = 0,
@@ -315,7 +345,37 @@ parameter_tabs <- tabsetPanel(
              
     ),
     tabPanel("SampleSize", 
-             numericInput(inputId="expb1",
+             numericInput(inputId="tail2",
+                          label="Alternative (two sided=2 or one side=1)",
+                          value=1,
+                          min = 1,
+                          max = 2),   
+             
+             numericInput(inputId="expb02",
+                          label="expb0",
+                          value=0.85,
+                          min = 0,
+                          max = 1000),
+             
+             numericInput(inputId="alpha2",
+                          label="Type I error",
+                          value=0.05,
+                          min = 0,
+                          max = 1),
+             
+             numericInput(inputId="t2",
+                          label="Mean exposure",
+                          value=1,
+                          min = 0,
+                          max = 1000),
+             
+             numericInput(inputId="p2",
+                          label="Parameter of bernoulli distribution",
+                          value=0.5,
+                          min = 0,
+                          max = 1),
+             
+             numericInput(inputId="expb12",
                           label="expb1",
                           value=1.3,
                           min = 0,
@@ -344,6 +404,36 @@ parameter_tabs <- tabsetPanel(
     ),
     
     tabPanel("EffectSize",
+             numericInput(inputId="tail3",
+                          label="Alternative (two sided=2 or one side=1)",
+                          value=1,
+                          min = 1,
+                          max = 2),   
+             
+             numericInput(inputId="expb03",
+                          label="expb0",
+                          value=0.85,
+                          min = 0,
+                          max = 1000),
+             
+             numericInput(inputId="alpha3",
+                          label="Type I error",
+                          value=0.05,
+                          min = 0,
+                          max = 1),
+             
+             numericInput(inputId="t3",
+                          label="Mean exposure",
+                          value=1,
+                          min = 0,
+                          max = 1000),
+             
+             numericInput(inputId="p3",
+                          label="Parameter of bernoulli distribution",
+                          value=0.5,
+                          min = 0,
+                          max = 1),
+             
              numericInput(inputId="n11",
                           label="Lower bound of sample size",
                           value=5,
@@ -393,38 +483,7 @@ ui <- fluidPage(
                          sidebarPanel(width = 4,
                              selectInput("type", "Type of Power analysis", 
                         choices = c("Power", "SampleSize", "EffectSize")),
-                        
-                        numericInput(inputId="tail",
-                                     label="Alternative (two sided=2 or one side=1)",
-                                     value=1,
-                                     min = 1,
-                                     max = 2),   
-                        
-                        numericInput(inputId="expb0",
-                                     label="expb0",
-                                     value=0.85,
-                                     min = 0,
-                                     max = 1000),
-                        
-                        numericInput(inputId="alpha",
-                                     label="Type I error",
-                                     value=0.05,
-                                     min = 0,
-                                     max = 1),
-                        
-                        numericInput(inputId="t",
-                                     label="Mean exposure",
-                                     value=1,
-                                     min = 0,
-                                     max = 1000),
-                        
-                        numericInput(inputId="p",
-                                     label="Parameter of bernoulli distribution",
-                                     value=0.5,
-                                     min = 0,
-                                     max = 1),
                         parameter_tabs,
-                        
                         downloadButton(outputId = "downloadData", 
                                        label = "Download")
                         ),
@@ -434,7 +493,7 @@ ui <- fluidPage(
                          )
                      )
                      ),
-    tabPanel("Document",
+            tabPanel("Document",
              mainPanel(
                  htmlOutput("inc")
              )
@@ -448,114 +507,114 @@ server <- function(input, output, session) {
     
     table_s<-eventReactive(input$do1,
                            {s.power(input$sim,
-                                    input$tail,
+                                    input$tail1,
                                     input$nsim,
                                     input$n1,
                                     input$n2,
                                     input$st,
-                                    input$expb0,
-                                    input$expb1,
-                                    input$p,
-                                    input$alpha,
-                                    input$t)}) 
+                                    input$expb01,
+                                    input$expb11,
+                                    input$p1,
+                                    input$alpha1,
+                                    input$t1)}) 
     table_g<-eventReactive(input$do1, 
-                           {g.power(input$tail,
+                           {g.power(input$tail1,
                                     input$n1,
                                     input$n2,
                                     input$st,
-                                    input$expb0,
-                                    input$expb1,
-                                    input$p,
-                                    input$alpha,
-                                    input$t)}) 
+                                    input$expb01,
+                                    input$expb11,
+                                    input$p1,
+                                    input$alpha1,
+                                    input$t1)}) 
     
     table_w <- eventReactive(input$do1, 
-                             {w.power(input$tail,
+                             {w.power(input$tail1,
                                       input$n1,
                                       input$n2,
                                       input$st,
-                                      input$expb0,
-                                      input$expb1,
-                                      input$p,
-                                      input$alpha,
-                                      input$t)})  
+                                      input$expb01,
+                                      input$expb11,
+                                      input$p1,
+                                      input$alpha1,
+                                      input$t1)})  
     table_p <- eventReactive(input$do1, 
-                             {p.power(input$tail,
+                             {p.power(input$tail1,
                                       input$n1,
                                       input$n2,
                                       input$st,
-                                      input$expb0,
-                                      input$expb1,
-                                      input$p,
-                                      input$alpha,
-                                      input$t)})
+                                      input$expb01,
+                                      input$expb11,
+                                      input$p1,
+                                      input$alpha1,
+                                      input$t1)})
     
     table_sg<-eventReactive(input$do2, 
-                            {g.size(input$tail,
-                                    input$expb0,
-                                    input$expb1,
-                                    input$p,
-                                    input$alpha,
+                            {g.size(input$tail2,
+                                    input$expb02,
+                                    input$expb12,
+                                    input$p2,
+                                    input$alpha2,
                                     input$power1,
                                     input$power2,
                                     input$pt,
-                                    input$t)}) 
+                                    input$t2)}) 
     table_sp<-eventReactive(input$do2, 
-                            {p.size(input$tail,
-                                    input$expb0,
-                                    input$expb1,
-                                    input$p,
-                                    input$alpha,
+                            {p.size(input$tail2,
+                                    input$expb02,
+                                    input$expb12,
+                                    input$p2,
+                                    input$alpha2,
                                     input$power1,
                                     input$power2,
                                     input$pt,
-                                    input$t)}) 
+                                    input$t2)}) 
     table_sw<-eventReactive(input$do2, 
-                            {w.size(input$tail,
-                                    input$expb0,
-                                    input$expb1,
-                                    input$p,
-                                    input$alpha,
+                            {w.size(input$tail2,
+                                    input$expb02,
+                                    input$expb12,
+                                    input$p2,
+                                    input$alpha2,
                                     input$power1,
                                     input$power2,
                                     input$pt,
-                                    input$t)}) 
+                                    input$t2)}) 
     table_fg<-eventReactive(input$do3, 
-                            {g.effect(input$tail,
-                                    input$expb0,
-                                    input$p,
-                                    input$alpha,
+                            {g.effect(input$tail3,
+                                    input$expb03,
+                                    input$p3,
+                                    input$alpha3,
                                     input$n11,
                                     input$n21,
                                     input$st1,
                                     input$power11,
                                     input$power21,
                                     input$pt1,
-                                    input$t)}) 
+                                    input$t3)}) 
     table_fp<-eventReactive(input$do3, 
-                            {p.effect(input$tail,
-                                      input$expb0,
-                                      input$p,
-                                      input$alpha,
-                                      input$n11,
-                                      input$n21,
-                                      input$st1,
-                                      input$power11,
-                                      input$power21,
-                                      input$pt1,
-                                      input$t)}) 
+                            {p.effect(input$tail3,
+                                       input$expb03,
+                                       input$p3,
+                                       input$alpha3,
+                                       input$n11,
+                                       input$n21,
+                                       input$st1,
+                                       input$power11,
+                                       input$power21,
+                                       input$pt1,
+                                       input$t3)})
     table_fw<-eventReactive(input$do3, 
-                            {w.effect(input$tail,
-                                      input$expb0,
-                                      input$p,
-                                      input$alpha,
+                            {w.effect(input$tail3,
+                                      input$expb03,
+                                      input$p3,
+                                      input$alpha3,
                                       input$n11,
                                       input$n21,
                                       input$st1,
                                       input$power11,
                                       input$power21,
                                       input$pt1,
-                                      input$t)}) 
+                                      input$t3)}) 
     
     
     table <- reactive({
